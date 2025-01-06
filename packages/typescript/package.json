@@ -1,7 +1,7 @@
 {
-  "name": "@overseer/sdk",
+  "name": "@overseerai/sdk-typescript",
   "version": "0.1.0",
-  "description": "Official SDK for Overseer content safety API",
+  "description": "Official TypeScript SDK for Overseer content safety API",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
@@ -24,17 +24,17 @@
   "author": "Overseer AI",
   "license": "MIT",
   "dependencies": {
-    "cross-fetch": "^3.1.5"
+    "cross-fetch": "^4.0.0"
   },
   "devDependencies": {
-    "@types/jest": "^29.5.14",
-    "@types/node": "^18.0.0",
+    "@types/jest": "^29.5.10",
+    "@types/node": "^20.10.0",
     "@typescript-eslint/eslint-plugin": "^5.0.0",
     "@typescript-eslint/parser": "^5.0.0",
     "eslint": "^8.0.0",
     "jest": "^29.7.0",
-    "ts-jest": "^29.2.5",
-    "typescript": "^4.9.0"
+    "ts-jest": "^29.1.1",
+    "typescript": "^5.3.2"
   },
   "publishConfig": {
     "access": "public"

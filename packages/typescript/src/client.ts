@@ -1,4 +1,5 @@
 import { OverseerConfig, ValidationOptions, ValidationResult, Policy } from './types';
+import fetch from 'cross-fetch';
 
 export class Overseer {
   private apiKey: string;
@@ -8,14 +9,11 @@ export class Overseer {
   constructor(config: OverseerConfig) {
     this.apiKey = config.apiKey;
     this.organizationId = config.organizationId;
-    this.baseUrl = config.baseUrl || 'https://api.overseer.ai';
+    this.baseUrl = config.baseUrl || 'https://api.overseerai.app';
   }
 
   /**
    * Validate content against specified policies
-   * 
-   * @param options Validation options including content and policies
-   * @returns Validation result with safety analysis
    */
   async validate(options: ValidationOptions): Promise<ValidationResult> {
     try {
@@ -35,7 +33,8 @@ export class Overseer {
       });
 
       if (!response.ok) {
-        throw new Error(`API request failed: ${response.statusText}`);
+        const errorText = await response.text();
+        throw new Error(`API request failed: ${errorText}`);
       }
 
       const data = await response.json();
@@ -54,14 +53,17 @@ export class Overseer {
         metadata: data.metadata
       };
     } catch (error) {
-      throw new Error(`Validation failed: ${error.message}`);
+      // Re-throw fetch errors directly
+      if (error instanceof Error) {
+        throw error;
+      }
+      // Handle unknown error types
+      throw new Error('An unknown error occurred');
     }
   }
 
   /**
    * Get all available policies
-   * 
-   * @returns List of configured policies
    */
   async getPolicies(): Promise<Policy[]> {
     try {
@@ -74,20 +76,21 @@ export class Overseer {
       });
 
       if (!response.ok) {
-        throw new Error(`API request failed: ${response.statusText}`);
+        const errorText = await response.text();
+        throw new Error(`API request failed: ${errorText}`);
       }
 
       return response.json();
     } catch (error) {
-      throw new Error(`Failed to fetch policies: ${error.message}`);
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('An unknown error occurred');
     }
   }
 
   /**
    * Create a new policy
-   * 
-   * @param policy Policy configuration
-   * @returns Created policy
    */
   async createPolicy(policy: Omit<Policy, 'id'>): Promise<Policy> {
     try {
@@ -102,12 +105,16 @@ export class Overseer {
       });
 
       if (!response.ok) {
-        throw new Error(`API request failed: ${response.statusText}`);
+        const errorText = await response.text();
+        throw new Error(`API request failed: ${errorText}`);
       }
 
       return response.json();
     } catch (error) {
-      throw new Error(`Failed to create policy: ${error.message}`);
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('An unknown error occurred');
     }
   }
 }
