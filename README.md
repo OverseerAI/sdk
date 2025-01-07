@@ -22,7 +22,7 @@ import { Overseer } from '@overseerai/sdk';
 
 // Initialize the client
 const overseer = new Overseer({
-  apiKey: 'your-api-key'
+  apiKey: 'your-api-key' // Grab an individual system's api key from the connections page in the dashboard
 });
 
 // Validate content
@@ -50,15 +50,12 @@ import { Overseer } from '@overseerai/sdk-typescript';
 
 // Initialize with type-safe config
 const overseer = new Overseer({
-  apiKey: 'your-api-key',
-  organizationId: 'optional-org-id' // Optional
+  apiKey: 'your-api-key', // Grab an individual system's api key from the connections page in the dashboard
 });
 
 // Validate with type-safe options
 const result = await overseer.validate({
   content: 'Hello! How can I help you today?',
-  policies: ['safety'], // Optional
-  systemId: 'optional-system-id' // Optional
 });
 
 if (result.valid) {
