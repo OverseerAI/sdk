@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { Overseer } from './index';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 
 jest.mock('axios');
 const mockedAxios = axios as jest.Mocked<typeof axios>;
@@ -121,13 +121,17 @@ describe('Overseer SDK', () => {
         rules: {}
       };
 
-      mockedAxios.post.mockRejectedValueOnce({
-        response: {
-          data: {
-            message: 'Invalid policy configuration'
-          }
-        }
-      });
+      const mockError = new Error('Invalid policy configuration') as AxiosError;
+      mockError.isAxiosError = true;
+      mockError.response = {
+        data: { message: 'Invalid policy configuration' },
+        status: 400,
+        statusText: 'Bad Request',
+        headers: {},
+        config: {} as any
+      };
+
+      mockedAxios.post.mockRejectedValueOnce(mockError);
 
       await expect(client.createPolicy(invalidPolicy as any)).rejects.toThrow('Invalid policy configuration');
     });
