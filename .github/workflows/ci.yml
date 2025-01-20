@@ -32,33 +32,4 @@ jobs:
       run: yarn workspaces run build
       
     - name: Test
-      run: yarn workspaces run test
-
-  publish:
-    needs: build
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Use Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20.x'
-        registry-url: 'https://registry.npmjs.org'
-        
-    - name: Install dependencies
-      run: yarn install --frozen-lockfile
-      
-    - name: Build
-      run: yarn workspaces run build
-      
-    - name: Publish packages
-      run: |
-        cd packages/typescript
-        npm publish --access public
-        cd ../node
-        npm publish --access public
-      env:
-        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }} 
+      run: yarn workspaces run test 
