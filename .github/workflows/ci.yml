@@ -55,7 +55,9 @@ jobs:
     - name: Build
       run: yarn workspaces run build
       
-    - name: Publish to NPM
-      run: yarn workspaces run npm publish --access public
+    - name: Publish packages
+      run: |
+        cd packages/typescript && yarn publish --access public
+        cd ../node && yarn publish --access public
       env:
         NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }} 
