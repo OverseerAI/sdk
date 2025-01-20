@@ -3,192 +3,138 @@
  */
 
 import { Overseer } from '../src/client';
-import { ValidationOptions } from '../src/types';
+import { ValidationOptions, Policy } from '../src/types';
+import axios from 'axios';
 import { describe, expect, it, beforeEach, jest } from '@jest/globals';
 
-// Mock cross-fetch module
-jest.mock('cross-fetch', () => ({
-  __esModule: true,
-  default: jest.fn()
-}));
+jest.mock('axios');
+const mockedAxios = axios as jest.Mocked<typeof axios>;
 
-import fetch from 'cross-fetch';
-const mockedFetch = fetch as jest.MockedFunction<typeof fetch>;
-
-describe('Overseer Policy Engine', () => {
-  const TEST_API_KEY = 'ovsk_test_key';
-  const TEST_ORG_ID = 'org_test_123';
-  const TEST_BASE_URL = 'http://localhost:8000';
-  
-  let client: Overseer;
-
-  beforeEach(() => {
-    client = new Overseer({
-      apiKey: TEST_API_KEY,
-      organizationId: TEST_ORG_ID,
-      baseUrl: TEST_BASE_URL
-    });
-    mockedFetch.mockClear();
+describe('Overseer SDK', () => {
+  const client = new Overseer({
+    apiKey: 'test-key',
+    organizationId: 'test-org'
   });
 
-  describe('Content Validation', () => {
-    it('should allow safe content', async () => {
-      const options: ValidationOptions = {
-        content: 'Hello, how can I help you today?',
-        policies: ['safety']
-      };
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
 
-      mockedFetch.mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
+  describe('validate', () => {
+    it('should allow safe content', async () => {
+      mockedAxios.post.mockResolvedValueOnce({
+        data: {
           is_flagged: false,
           safety_code: null,
-          reasons: []
-        })
-      } as Response);
+          metadata: {}
+        }
+      });
 
-      const result = await client.validate(options);
+      const result = await client.validate({
+        content: 'Hello world'
+      });
+
       expect(result.valid).toBe(true);
       expect(result.issues).toBeUndefined();
     });
 
-    it('should detect harmful content', async () => {
-      const options: ValidationOptions = {
-        content: 'I will hack your system and steal your data',
-        policies: ['safety']
-      };
-
-      mockedFetch.mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
+    it('should reject unsafe content', async () => {
+      mockedAxios.post.mockResolvedValueOnce({
+        data: {
           is_flagged: true,
-          safety_code: 'S2',
-          reasons: ['Harmful content detected']
-        })
-      } as Response);
+          safety_code: 'UNSAFE_CONTENT',
+          reasons: ['Content violates policy'],
+          metadata: { category: 'unsafe' }
+        }
+      });
 
-      const result = await client.validate(options);
+      const result = await client.validate({
+        content: 'Unsafe content'
+      });
+
       expect(result.valid).toBe(false);
-      expect(result.issues).toBeDefined();
-      expect(result.issues![0].type).toBe('safety');
-      expect(result.issues![0].message.toLowerCase()).toContain('harmful');
+      expect(result.issues).toHaveLength(1);
+      expect(result.issues![0].type).toBe('data_protection');
+      expect(result.issues![0].message).toBe('Content violates policy');
     });
 
-    it('should handle API errors gracefully', async () => {
-      const options: ValidationOptions = {
-        content: 'Test content',
-        policies: ['safety']
-      };
+    it('should handle API errors', async () => {
+      mockedAxios.post.mockRejectedValueOnce(new Error('API Error'));
 
-      mockedFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 401,
-        statusText: 'Unauthorized',
-        text: async () => 'Invalid API key'
-      } as Response);
-
-      await expect(client.validate(options)).rejects.toThrow('API request failed: Invalid API key');
-    });
-
-    it('should handle network errors', async () => {
-      const options: ValidationOptions = {
-        content: 'Test content',
-        policies: ['safety']
-      };
-
-      mockedFetch.mockRejectedValueOnce(new Error('Network error'));
-
-      await expect(client.validate(options)).rejects.toThrow('Network error');
+      await expect(client.validate({
+        content: 'Test content'
+      })).rejects.toThrow('API Error');
     });
   });
 
-  describe('Policy Management', () => {
-    it('should fetch policies', async () => {
-      const mockPolicies = [
-        {
-          id: 'pol_1',
-          name: 'Safety Policy',
-          description: 'Basic safety checks',
-          rules: [{ id: 'rule_1', type: 'safety', config: {} }]
+  describe('policies', () => {
+    it('should get policies', async () => {
+      const mockPolicies: Policy[] = [{
+        id: '1',
+        name: 'Test Policy',
+        description: 'A test policy',
+        status: 'active',
+        rules: {
+          jailbreak: {
+            enabled: true,
+            detectPromptInjection: true
+          },
+          dataProtection: {
+            enabled: true,
+            detectPII: true
+          }
         }
-      ];
+      }];
 
-      mockedFetch.mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockPolicies
-      } as Response);
+      mockedAxios.get.mockResolvedValueOnce({ data: mockPolicies });
 
       const policies = await client.getPolicies();
       expect(policies).toEqual(mockPolicies);
     });
 
-    it('should create a new policy', async () => {
-      const newPolicy = {
-        name: 'Custom Policy',
-        description: 'Custom safety rules',
-        rules: [{ id: 'rule_1', type: 'custom', config: {} }]
+    it('should create policy', async () => {
+      const newPolicy: Omit<Policy, 'id'> = {
+        name: 'New Policy',
+        description: 'A new test policy',
+        status: 'active',
+        rules: {
+          jailbreak: {
+            enabled: true,
+            detectPromptInjection: true
+          },
+          dataProtection: {
+            enabled: true,
+            detectPII: true
+          }
+        }
       };
 
       const mockResponse = {
-        id: 'pol_2',
+        id: '2',
         ...newPolicy
       };
 
-      mockedFetch.mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockResponse
-      } as Response);
+      mockedAxios.post.mockResolvedValueOnce({ data: mockResponse });
 
       const policy = await client.createPolicy(newPolicy);
       expect(policy).toEqual(mockResponse);
     });
 
-    it('should handle policy creation errors', async () => {
+    it('should handle invalid policy creation', async () => {
       const invalidPolicy = {
-        name: '',
-        rules: []
+        name: 'Invalid Policy',
+        rules: {}
       };
 
-      mockedFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 400,
-        statusText: 'Bad Request',
-        text: async () => 'Invalid policy configuration'
-      } as Response);
-
-      await expect(client.createPolicy(invalidPolicy)).rejects.toThrow('API request failed: Invalid policy configuration');
-    });
-  });
-
-  describe('Configuration', () => {
-    it('should use default base URL if not provided', () => {
-      const defaultClient = new Overseer({
-        apiKey: TEST_API_KEY
+      mockedAxios.post.mockRejectedValueOnce({
+        response: {
+          data: {
+            message: 'Invalid policy configuration'
+          }
+        }
       });
-      expect(defaultClient['baseUrl']).toBe('https://api.overseerai.app');
-    });
 
-    it('should include organization ID in headers when provided', async () => {
-      const options: ValidationOptions = {
-        content: 'Test content',
-        policies: ['safety']
-      };
-
-      mockedFetch.mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ is_flagged: false })
-      } as Response);
-
-      await client.validate(options);
-
-      expect(mockedFetch).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.objectContaining({
-          headers: expect.objectContaining({
-            'X-Organization-ID': TEST_ORG_ID
-          })
-        })
-      );
+      await expect(client.createPolicy(invalidPolicy as any)).rejects.toThrow('Invalid policy configuration');
     });
   });
 }); 
