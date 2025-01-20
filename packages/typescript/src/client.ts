@@ -1,6 +1,10 @@
 import { OverseerConfig, ValidationOptions, ValidationResult, Policy, ValidationIssue } from './types';
 import axios, { AxiosError } from 'axios';
 
+interface APIErrorResponse {
+  message: string;
+}
+
 export class Overseer {
   private apiKey: string;
   private organizationId?: string;
@@ -54,7 +58,7 @@ export class Overseer {
       };
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
-        const axiosError = error as AxiosError;
+        const axiosError = error as AxiosError<APIErrorResponse>;
         throw new Error(axiosError.response?.data?.message || axiosError.message);
       }
       throw error;
@@ -77,7 +81,7 @@ export class Overseer {
       return response.data;
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
-        const axiosError = error as AxiosError;
+        const axiosError = error as AxiosError<APIErrorResponse>;
         throw new Error(axiosError.response?.data?.message || axiosError.message);
       }
       throw error;
@@ -104,7 +108,7 @@ export class Overseer {
       return response.data;
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
-        const axiosError = error as AxiosError;
+        const axiosError = error as AxiosError<APIErrorResponse>;
         throw new Error(axiosError.response?.data?.message || axiosError.message);
       }
       throw error;

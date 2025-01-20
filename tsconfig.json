@@ -3,13 +3,15 @@
     "target": "es2018",
     "module": "commonjs",
     "declaration": true,
-    "outDir": "./dist",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "moduleResolution": "node"
   },
-  "include": ["src"],
-  "exclude": ["node_modules", "dist", "**/*.test.ts"]
+  "exclude": ["node_modules", "dist"],
+  "references": [
+    { "path": "./packages/typescript" },
+    { "path": "./packages/node" }
+  ]
 } 

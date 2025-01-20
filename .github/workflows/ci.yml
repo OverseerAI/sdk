@@ -9,29 +9,53 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     strategy:
       matrix:
-        node-version: [16.x, 18.x, 20.x]
+        node-version: [18.x, 20.x]
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     
     - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'yarn'
         
     - name: Install dependencies
-      run: |
-        yarn install --frozen-lockfile
-        
-    - name: Build
-      run: yarn build
-      
-    - name: Test
-      run: yarn test
+      run: yarn install --frozen-lockfile
       
     - name: Lint
-      run: yarn lint 
+      run: yarn workspaces run lint
+      
+    - name: Build
+      run: yarn workspaces run build
+      
+    - name: Test
+      run: yarn workspaces run test
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Use Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        registry-url: 'https://registry.npmjs.org'
+        cache: 'yarn'
+        
+    - name: Install dependencies
+      run: yarn install --frozen-lockfile
+      
+    - name: Build
+      run: yarn workspaces run build
+      
+    - name: Publish to NPM
+      run: yarn workspaces run npm publish --access public
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }} 

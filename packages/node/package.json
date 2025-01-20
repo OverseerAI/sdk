@@ -1,7 +1,7 @@
 {
-  "name": "@overseerai/sdk",
-  "version": "1.0.4",
-  "description": "Node.js SDK for Overseer AI content safety",
+  "name": "@overseerai/node",
+  "version": "1.1.0",
+  "description": "OverseerAI Node.js SDK with advanced rules engine for AI content validation and policy enforcement",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
@@ -11,30 +11,32 @@
     "prepare": "npm run build"
   },
   "files": [
-    "dist"
+    "dist",
+    "README.md"
   ],
   "keywords": [
     "ai",
-    "content",
+    "content-moderation",
+    "policy-enforcement",
+    "compliance",
     "safety",
-    "moderation",
-    "overseer"
+    "validation"
   ],
-  "author": "Overseer AI",
+  "author": "OverseerAI",
   "license": "MIT",
   "dependencies": {
     "axios": "^1.6.2"
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",
-    "@types/jest": "^29.5.10",
-    "@types/node": "^20.10.0",
-    "@typescript-eslint/eslint-plugin": "^5.0.0",
-    "@typescript-eslint/parser": "^5.0.0",
+    "@types/jest": "^29.5.0",
+    "@types/node": "^20.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
     "eslint": "^8.0.0",
-    "jest": "^29.7.0",
-    "ts-jest": "^29.1.1",
-    "typescript": "^5.3.2"
+    "jest": "^29.5.0",
+    "ts-jest": "^29.1.0",
+    "typescript": "^5.0.0"
   },
   "publishConfig": {
     "access": "public"
